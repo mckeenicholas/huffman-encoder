@@ -1,6 +1,7 @@
 #include <map>
 #include <queue>
 #include <bitset>
+#include <iostream>
 
 #include "compress.h"
 
@@ -28,7 +29,7 @@ int compress_file(std::string& inputFileName, std::string& outputFileName, bool 
     }
 
     // Write Huffman-encoded data to binary file
-    writeToBinary(inputFileName, outputFileName, huffmanCodes);
+    writeToBinary(inputFileName, outputFileName, huffmanCodes, huffmanRoot);
 
     // Free allocated memory for nodes
     for (auto& pair : charMap) {
@@ -94,8 +95,14 @@ void generateHuffmanCodes(node* root, const std::string& code, std::map<char, st
     }
 }
 
+void padEnd(std::string& input) {
+    size_t padding = 8 - (input.length() % 8);
+    if (padding != 8) {
+        input += std::string(padding, '0');
+    }
+}
 
-void writeToBinary(const std::string& inputFile, const std::string& outputFile, std::map<char, std::string>& huffmanCodes) {
+void writeToBinary(const std::string& inputFile, const std::string& outputFile, std::map<char, std::string>& huffmanCodes, node *huffmanTree) {
     std::ifstream input(inputFile, std::ios::binary);
     std::ofstream output(outputFile, std::ios::binary);
 
@@ -112,19 +119,70 @@ void writeToBinary(const std::string& inputFile, const std::string& outputFile, 
         encodedData += huffmanCodes[ch];
     }
 
+    std::string leafIndicator, treeValues;
+    postOrderTraversal(huffmanTree, true, leafIndicator);
+    postOrderTraversal(huffmanTree, false, treeValues);
+
+    // Pad the end of encodedData and leafIndicator to they are a multiple of 8 bits
+    padEnd(leafIndicator);
+    padEnd(encodedData);
+
     // Write the length of the encoded data to the output file
-    size_t length = encodedData.size();
+    uint32_t length = encodedData.size();
     output.write(reinterpret_cast<const char*>(&length), sizeof(length));
 
-    // Convert the binary string to actual binary data and write to the output file
+    // Write the size of the tree to the output file
+    uint32_t treeSize = leafIndicator.length();
+    output.write(reinterpret_cast<const char*>(&treeSize), sizeof(treeSize));
+
+    // Convert binary string of encoded data to actual binary data and write to the output file
     std::bitset<8> bits;
     for (size_t i = 0; i < length; i += 8) {
         for (size_t j = 0; j < 8 && i + j < length; ++j) {
-            bits[j] = (encodedData[i + j] == '1');
+            // Using 7 - j for little endian order
+            bits[7 - j] = (encodedData[i + j] == '1');
         }
         output.put(bits.to_ulong());
     }
 
     input.close();
+
+    // Convert binary string of leafIndicator to binary and write to output file
+    for (size_t i = 0; i < treeSize; i += 8) {
+        for(size_t j = 0; j < 8 && i + j < treeSize; ++j) {
+            // Using 7 - j for little endian order
+            bits[7 - j] = (leafIndicator[i + j] == '1');
+        }
+        output.put(bits.to_ulong());
+    }
+
+    // Write tree contents to output file
+    for (char c : treeValues) {
+        output.put(c);
+    }
+
+    std::cout << leafIndicator << " " << treeValues;
+
     output.close();
+}
+
+// Create post order traversal, mode 0 outputs values, mode 1 outputs strucutre
+void postOrderTraversal(node *root, bool mode, std::string& output) {
+    if (root) {
+        postOrderTraversal(root->left, mode, output);
+        postOrderTraversal(root->right, mode, output);
+
+        if (mode) {
+            // Check if the current node is a leaf
+            if (!root->left && !root->right) {
+                output += '1'; // Node is a leaf
+            } else {
+                output += '0'; // Node is not a leaf
+            }
+        } else {
+            if (!root->left && !root->right) {
+                output += root->letter;
+            }
+        }
+    }
 }

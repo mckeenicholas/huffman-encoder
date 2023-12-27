@@ -18,8 +18,12 @@ node* buildHuffmanTree(const std::map<char, node*>& charMap);
 
 std::map<char, node*> countCharacters(std::ifstream& inputFile);
 
-void writeToBinary(const std::string& inputFile, const std::string& outputFile, std::map<char, std::string>& huffmanCodes);
+void writeToBinary(const std::string& inputFile, const std::string& outputFile, std::map<char, std::string>& huffmanCodes,  node *huffmanTree);
 
 void generateHuffmanCodes(node* root, const std::string& code, std::map<char, std::string>& huffmanCodes);
+
+void postOrderTraversal(node *root, bool mode, std::string& output);
+
+void padEnd(const std::string& input);
 
 #endif // COMPRESS_H

@@ -17,6 +17,6 @@ void printHuffmanTree(node* root, std::string code = "");
 
 void printHelpMessage();
 
-bool parseArguments(int argc, char** argv, std::string& inputFile, std::string& outputFile, bool& verbose);
+bool parseArguments(int argc, char** argv, std::string& inputFile, std::string& outputFile, bool& verbose, bool& mode);
 
 #endif // HUFFMAN_ENCODER_H
