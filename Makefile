@@ -2,10 +2,10 @@ CFLAGS = -Wall -Werror -g
 
 all: huffman_encoder
 
-huffman_encoder: huffman_encoder.o compress.o
-	g++ $(CFLAGS) -o huffman_encoder compress.o huffman_encoder.o
+huffman_encoder: huffman_encoder.o compress.o expand.o
+	g++ $(CFLAGS) -o huffman_encoder compress.o huffman_encoder.o expand.o
 
-%.o: %.c++ %.h
+%.o: %.cpp %.h
 	g++ $(CFLAGS) -c $<
 
 clean:
