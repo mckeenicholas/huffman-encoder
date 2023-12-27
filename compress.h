@@ -24,6 +24,6 @@ void generateHuffmanCodes(node* root, const std::string& code, std::map<char, st
 
 void postOrderTraversal(node *root, bool mode, std::string& output);
 
-void padEnd(const std::string& input);
+void padEnd(std::string& input);
 
 #endif // COMPRESS_H
