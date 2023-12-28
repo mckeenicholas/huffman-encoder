@@ -33,6 +33,10 @@ int expand_file(std::string& inputFileName, std::string& outputFileName, bool ve
         leafIndicator += bits.to_string();
     }
 
+    // Remove extra padding on binary data
+    encodedData.erase(encodedData.begin() + length, encodedData.end());
+    leafIndicator.erase(leafIndicator.begin() + treeSize, leafIndicator.end());
+
     // Read tree contents
     std::string treeValues;
     char c;
@@ -42,13 +46,44 @@ int expand_file(std::string& inputFileName, std::string& outputFileName, bool ve
 
     inputFile.close();
 
-    std::cout << leafIndicator << " " << treeValues;
+    node *huffmanRoot = reconstructTree(leafIndicator, treeValues);
+
+    if (verbose) {
+        printHuffmanTree(huffmanRoot);
+    }
+
+    std::string message = "";
+    size_t index = 0;
+
+    while (index < encodedData.length()) {
+        node *current = huffmanRoot;
+        while (current->left || current->right) {
+            if (encodedData[index] == '0') {
+                current = current->left;
+            } else {
+                current = current->right;
+            }
+            index++;
+        }
+        message += current->letter;
+    }
+
+    std::ofstream outputFile(outputFileName);
+
+    if (!outputFile.is_open()) {
+        perror("open");
+        return 1;
+    }
+
+    outputFile << message;
+
+    outputFile.close();
 
     return 0;
 }
 
 // Function to reconstruct Huffman tree
-node* reconstructTree(std::string& structure, std::string& values) {
+node *reconstructTree(std::string& structure, std::string& values) {
     if (structure.back() == '0') {
         node *root = new node{0, '\0', nullptr, nullptr};
 

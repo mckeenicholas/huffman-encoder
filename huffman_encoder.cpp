@@ -94,7 +94,7 @@ bool parseArguments(int argc, char** argv, std::string& inputFile, std::string& 
     }
 
     if (!output_set) {
-        outputFile = (compress ? "compressed.bin" : "expanded.bin");
+        outputFile = (compress ? "compressed.bin" : "expanded.txt");
     }
 
     return true;
