@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -g
+CFLAGS = -Wall -Werror -O3 -std=c++20
 
 all: huffman_encoder
 

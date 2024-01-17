@@ -2,6 +2,7 @@
 #include <queue>
 #include <bitset>
 #include <iostream>
+#include <iomanip>
 
 #include "compress.h"
 
@@ -12,9 +13,12 @@ int compress_file(std::string& inputFileName, std::string& outputFileName, bool 
         return 1;
     }
 
-    std::map<char, node*> charMap = countCharacters(inputFile);
-    inputFile.close();
+    // Get the original file size
+    inputFile.seekg(0, std::ios::end);
+    size_t originalFileSize = inputFile.tellg();
+    inputFile.seekg(0, std::ios::beg);
 
+    std::map<char, node*> charMap = countCharacters(inputFile);
 
     // Build Huffman tree
     node* huffmanRoot = buildHuffmanTree(charMap);
@@ -35,6 +39,16 @@ int compress_file(std::string& inputFileName, std::string& outputFileName, bool 
     for (auto& pair : charMap) {
         delete pair.second;
     }
+
+    // Get the compressed file size
+    std::ifstream compressedFile(outputFileName, std::ios::binary);
+    compressedFile.seekg(0, std::ios::end);
+    size_t compressedFileSize = compressedFile.tellg();
+    compressedFile.close();
+
+    // Calculate and print the percent file size reduction
+    double reductionPercentage = (1.0 - static_cast<double>(compressedFileSize) / originalFileSize) * 100.0;
+    std::cout << "Original file size: " << originalFileSize << ", compressed file size: " << compressedFileSize << " Reduction: " << std::fixed << std::setprecision(2) << reductionPercentage << "%" << std::endl;
 
     return 0;
 }
@@ -123,10 +137,6 @@ void writeToBinary(const std::string& inputFile, const std::string& outputFile, 
     postOrderTraversal(huffmanTree, true, leafIndicator);
     postOrderTraversal(huffmanTree, false, treeValues);
 
-    // Pad the end of encodedData and leafIndicator to they are a multiple of 8 bits
-    padEnd(leafIndicator);
-    padEnd(encodedData);
-
     // Write the length of the encoded data to the output file
     uint32_t length = encodedData.size();
     output.write(reinterpret_cast<const char*>(&length), sizeof(length));
@@ -134,6 +144,10 @@ void writeToBinary(const std::string& inputFile, const std::string& outputFile, 
     // Write the size of the tree to the output file
     uint32_t treeSize = leafIndicator.length();
     output.write(reinterpret_cast<const char*>(&treeSize), sizeof(treeSize));
+
+    // Pad the end of encodedData and leafIndicator to they are a multiple of 8 bits
+    padEnd(leafIndicator);
+    padEnd(encodedData);
 
     // Convert binary string of encoded data to actual binary data and write to the output file
     std::bitset<8> bits;
@@ -160,8 +174,6 @@ void writeToBinary(const std::string& inputFile, const std::string& outputFile, 
     for (char c : treeValues) {
         output.put(c);
     }
-
-    std::cout << leafIndicator << " " << treeValues;
 
     output.close();
 }
