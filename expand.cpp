@@ -27,7 +27,7 @@ int expand_file(std::string& inputFileName, std::string& outputFileName, bool ve
     }
 
     // Read the leaf indicator
-    std::string leafIndicator;
+    std::string leafIndicator;  
     for (uint32_t i = 0; i < treeSize; i += 8) {
         bits = inputFile.get();
         leafIndicator += bits.to_string();

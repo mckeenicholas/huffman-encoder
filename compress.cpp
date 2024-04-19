@@ -3,6 +3,7 @@
 #include <bitset>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 
 #include "compress.h"
 
@@ -53,9 +54,9 @@ int compress_file(std::string& inputFileName, std::string& outputFileName, bool 
     return 0;
 }
 
-node* buildHuffmanTree(const std::map<char, node*>& charMap) {
+std::shared_ptr<node> buildHuffmanTree(const std::map<char, std::shared_ptr<node>>& charMap) {
     // Use a priority queue to build the Huffman tree
-    std::priority_queue<node*, std::vector<node*>, CompareNodes> pq;
+    std::priority_queue<std::shared_ptr<node>, std::vector<std::shared_ptr<node>>, CompareNodes> pq;
 
     // Initialize the priority queue with nodes from the character frequency map
     for (const auto& pair : charMap) {
@@ -64,13 +65,13 @@ node* buildHuffmanTree(const std::map<char, node*>& charMap) {
 
     // Build the Huffman tree by merging nodes until there is only one node left
     while (pq.size() > 1) {
-        node* left = pq.top();
+        std::shared_ptr<node> left = pq.top();
         pq.pop();
-        node* right = pq.top();
+        std::shared_ptr<node> right = pq.top();
         pq.pop();
 
         // Create a new node with a frequency equal to the sum of the frequencies of its children
-        node* mergedNode = new node{left->freq + right->freq, '\0', left, right};
+        std::shared_ptr<node> mergedNode = std::make_shared<node>(left->freq + right->freq, '\0', left, right);
         pq.push(mergedNode);
     }
 
